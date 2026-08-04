@@ -36,9 +36,18 @@ class RoadScrollViewModel extends ChangeNotifier {
   double _pulsePhase = 0.0;
   late int _lastActiveLevel;
   double _hopPhase = 1.0;
+  int _levelUpCount = 0;
 
   double get cameraProgress => _cameraProgress;
   LongDistanceTargetUiItem get target => MapGenerator.target;
+  int get levelUpCount => _levelUpCount;
+
+  /// Increments the level-up counter shown, with a flashy pop animation,
+  /// in the app bar.
+  void levelUp() {
+    _levelUpCount++;
+    notifyListeners();
+  }
 
   /// The target the camera's horizontal offset eases toward: the nearest
   /// level's xOffset, snapped rather than interpolated continuously.
