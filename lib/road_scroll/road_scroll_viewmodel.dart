@@ -61,19 +61,16 @@ class RoadScrollViewModel extends ChangeNotifier {
 
   /// Vertical offset for the active-level indicator: 0 at rest (landed on
   /// the item), bouncing up and back down whenever the active level changes.
-  double get activeIndicatorBounce =>
-      _hopPhase >= 1.0 ? 0.0 : -activeIndicatorHopHeight * sin(_hopPhase * pi);
+  double get activeIndicatorBounce => _hopPhase >= 1.0 ? 0.0 : -activeIndicatorHopHeight * sin(_hopPhase * pi);
 
-  /// Levels are infinite, so this window is generated on demand rather
-  /// than sliced from a pre-built list.
+  /// Levels are infinite, so this window is generated on demand
   List<LevelUiItem> get visibleLevels {
     final start = max((_cameraProgress - behindWindow).ceil(), minProgress.toInt());
     final end = (_cameraProgress + aheadWindow).floor();
     return [for (var number = start; number <= end; number++) MapGenerator.levelAt(number)];
   }
 
-  List<SideUiItem> get visibleSideItems =>
-      MapGenerator.sideItemsInRange(_cameraProgress - behindWindow, _cameraProgress + aheadWindow);
+  List<SideUiItem> get visibleSideItems => MapGenerator.sideItemsInRange(_cameraProgress - behindWindow, _cameraProgress + aheadWindow);
 
   /// The level number closest to the current camera position.
   int pickNearestLevel() => max(_cameraProgress.round(), minProgress.toInt());
