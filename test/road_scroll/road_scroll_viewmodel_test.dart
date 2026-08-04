@@ -129,16 +129,19 @@ void main() {
 
     test('visibleSideItems excludes items whose range is far from cameraProgress, includes those near it', () {
       final vm = RoadScrollViewModel();
-      final firstItem = vm.map.sideItems.first;
+      final firstItem = MapGenerator.sideItemAt(MapGenerator.sideItemSpacing);
+      bool containsFirstItem() => vm.visibleSideItems.any(
+        (s) => s.minLevelSeen == firstItem.minLevelSeen && s.maxLevelSeen == firstItem.maxLevelSeen,
+      );
 
-      expect(vm.visibleSideItems.contains(firstItem), isTrue);
+      expect(containsFirstItem(), isTrue);
 
       vm.onDragUpdate(-99 * RoadScrollViewModel.pixelsPerLevel);
       expect(vm.cameraProgress, 100.0);
-      expect(vm.visibleSideItems.contains(firstItem), isFalse);
+      expect(containsFirstItem(), isFalse);
 
       vm.onDragUpdate(92 * RoadScrollViewModel.pixelsPerLevel);
-      expect(vm.visibleSideItems.contains(firstItem), isTrue);
+      expect(containsFirstItem(), isTrue);
     });
   });
 }

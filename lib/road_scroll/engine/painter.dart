@@ -69,8 +69,9 @@ class Road3DPainter extends CustomPainter {
   final double cameraProgress;
   final double cameraXOffset;
   final double pulsePhase;
+  final double activeIndicatorBounce;
 
-  Road3DPainter({required this.levels, required this.sideItems, required this.target, required this.cameraProgress, required this.cameraXOffset, required this.pulsePhase});
+  Road3DPainter({required this.levels, required this.sideItems, required this.target, required this.cameraProgress, required this.cameraXOffset, required this.pulsePhase, required this.activeIndicatorBounce});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -208,6 +209,21 @@ class Road3DPainter extends CustomPainter {
         ..lineTo(center.dx - baseRadius * 0.1, center.dy + baseRadius * 0.25)
         ..lineTo(center.dx + baseRadius * 0.35, center.dy - baseRadius * 0.25);
       canvas.drawPath(checkPath, checkPaint);
+    }
+
+    // Always marks the current active level (nearest to the camera),
+    // landed directly on it at rest. Whenever the active level changes,
+    // activeIndicatorBounce arcs it up and back down onto the new disc.
+    if (level.number == cameraProgress.round()) {
+      final indicatorRadius = 8.0 * scale;
+      var indicatorCenter = center.translate(0, activeIndicatorBounce);
+      // Never let it render below the screen — hold it at a safe margin
+      // from the bottom edge instead of sliding off with the disc.
+      final maxIndicatorY = projection.size.height - indicatorRadius - 4.0;
+      if (indicatorCenter.dy > maxIndicatorY) {
+        indicatorCenter = Offset(indicatorCenter.dx, maxIndicatorY);
+      }
+      canvas.drawCircle(indicatorCenter, indicatorRadius, Paint()..color = const Color(0xFFFFEB3B));
     }
   }
 

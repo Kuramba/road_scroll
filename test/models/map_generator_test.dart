@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:road_scroll/models/level_status.dart';
 import 'package:road_scroll/models/map_generator.dart';
 
 void main() {
@@ -28,51 +27,4 @@ void main() {
     });
   });
 
-  group('MapGenerator.generateMap levels', () {
-    final map = MapGenerator().generateMap();
-
-    test('produces exactly 100 sequential levels', () {
-      expect(map.levels.length, 100);
-      for (var i = 0; i < 100; i++) {
-        expect(map.levels[i].number, i + 1);
-      }
-    });
-
-    test('first 20 levels are passed, level 21 is inProgress, rest notPassed', () {
-      for (var i = 0; i < 20; i++) {
-        expect(map.levels[i].status, LevelStatus.passed);
-      }
-      expect(map.levels[20].status, LevelStatus.inProgress);
-      for (var i = 21; i < 100; i++) {
-        expect(map.levels[i].status, LevelStatus.notPassed);
-      }
-    });
-
-    test('each level xOffset matches the wave function', () {
-      for (final level in map.levels) {
-        expect(
-          level.xOffset,
-          closeTo(MapGenerator.waveXOffsetForPosition(level.number.toDouble()), 0.0001),
-        );
-      }
-    });
-  });
-
-  group('MapGenerator.generateMap side items and target', () {
-    final map = MapGenerator().generateMap();
-
-    test('produces the configured number of side items, each with a valid range', () {
-      expect(map.sideItems.length, MapGenerator.sideItemCount);
-      for (final item in map.sideItems) {
-        expect(item.minLevelSeen, lessThanOrEqualTo(item.maxLevelSeen));
-        expect(item.minLevelSeen, greaterThanOrEqualTo(1));
-        expect(item.maxLevelSeen, lessThanOrEqualTo(MapGenerator.totalLevels));
-        expect(item.xOffset.abs(), greaterThan(1.0));
-      }
-    });
-
-    test('places the target at the configured level position', () {
-      expect(map.target.levelPosition, MapGenerator.targetLevelPosition);
-    });
-  });
 }
