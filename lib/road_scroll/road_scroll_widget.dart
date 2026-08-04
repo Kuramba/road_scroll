@@ -11,8 +11,7 @@ class RoadScrollWidget extends StatefulWidget {
   State<RoadScrollWidget> createState() => _RoadScrollWidgetState();
 }
 
-class _RoadScrollWidgetState extends State<RoadScrollWidget>
-    with SingleTickerProviderStateMixin {
+class _RoadScrollWidgetState extends State<RoadScrollWidget> with SingleTickerProviderStateMixin {
   late final RoadScrollViewModel _viewModel;
   late final Ticker _ticker;
   Duration _lastElapsed = Duration.zero;
@@ -51,7 +50,6 @@ class _RoadScrollWidgetState extends State<RoadScrollWidget>
             levels: _viewModel.visibleLevels,
             sideItems: _viewModel.visibleSideItems,
             target: _viewModel.map.target,
-            isTargetVisible: _viewModel.isTargetVisible,
             cameraProgress: _viewModel.cameraProgress,
             cameraXOffset: _viewModel.cameraXOffset,
             pulsePhase: _viewModel.pulsePhase,

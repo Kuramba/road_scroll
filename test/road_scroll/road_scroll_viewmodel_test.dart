@@ -27,13 +27,34 @@ void main() {
       expect(vm.cameraProgress, 100.0);
     });
 
-    test('cameraXOffset always matches the wave function at cameraProgress', () {
+    test('cameraXOffset matches the wave function at the nearest whole level', () {
       final vm = RoadScrollViewModel();
-      vm.onDragUpdate(-360.0);
+      vm.onDragUpdate(-402.0); // cameraProgress = 4.35, nearest level = 4
       expect(
         vm.cameraXOffset,
-        closeTo(MapGenerator.waveXOffsetForPosition(vm.cameraProgress), 0.0001),
+        closeTo(MapGenerator.waveXOffsetForPosition(4.0), 0.0001),
       );
+    });
+
+    test('cameraXOffset stays constant while cameraProgress moves within the same nearest level', () {
+      final vm = RoadScrollViewModel();
+      vm.onDragUpdate(-396.0); // cameraProgress = 4.3, nearest level = 4
+      final offsetA = vm.cameraXOffset;
+      vm.onDragUpdate(-12.0); // cameraProgress = 4.4, still nearest level = 4
+      final offsetB = vm.cameraXOffset;
+      expect(offsetB, closeTo(offsetA, 0.0001));
+    });
+
+    test('cameraXOffset jumps discretely as cameraProgress crosses a level boundary', () {
+      final vm = RoadScrollViewModel();
+      vm.onDragUpdate(-396.0); // cameraProgress = 4.3, nearest level = 4
+      final beforeJump = vm.cameraXOffset;
+      expect(beforeJump, closeTo(MapGenerator.waveXOffsetForPosition(4.0), 0.0001));
+
+      vm.onDragUpdate(-48.0); // cameraProgress = 4.7, nearest level = 5
+      final afterJump = vm.cameraXOffset;
+      expect(afterJump, closeTo(MapGenerator.waveXOffsetForPosition(5.0), 0.0001));
+      expect(afterJump, isNot(closeTo(beforeJump, 0.05)));
     });
 
     test('notifies listeners on drag', () {
@@ -118,16 +139,6 @@ void main() {
 
       vm.onDragUpdate(92 * RoadScrollViewModel.pixelsPerLevel);
       expect(vm.visibleSideItems.contains(firstItem), isTrue);
-    });
-
-    test('isTargetVisible is true near the target and false far from it', () {
-      final vm = RoadScrollViewModel();
-      final targetLevel = vm.map.target.levelPosition.toDouble();
-      vm.onDragUpdate(-(targetLevel - 1) * RoadScrollViewModel.pixelsPerLevel);
-      expect(vm.isTargetVisible, isTrue);
-
-      vm.onDragUpdate(1000000.0); // drag hard back toward level 1
-      expect(vm.isTargetVisible, isFalse);
     });
   });
 }

@@ -41,5 +41,10 @@ void main() {
       expect(slightlyBehind.dy, greaterThan(atCamera.dy));
       expect(farBehind.dy, greaterThan(slightlyBehind.dy));
     });
+
+    test('far-behind relativeZ projects below the bottom of the screen', () {
+      final farBehind = projection.project(-3.0, 0.0);
+      expect(farBehind.dy, greaterThan(size.height));
+    });
   });
 }

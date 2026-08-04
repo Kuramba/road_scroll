@@ -29,61 +29,37 @@ class MapGenerator {
   List<LevelUiItem> _generate100LevelsAsWaves() {
     return List.generate(totalLevels, (index) {
       final number = index + 1;
-      final status = number <= passedCount
-          ? LevelStatus.passed
-          : (number == passedCount + 1 ? LevelStatus.inProgress : LevelStatus.notPassed);
-      return LevelUiItem(
-        number: number,
-        status: status,
-        xOffset: waveXOffsetForPosition(number.toDouble()),
-      );
+      final status = number <= passedCount ? LevelStatus.passed : (number == passedCount + 1 ? LevelStatus.inProgress : LevelStatus.notPassed);
+      return LevelUiItem(number: number, status: status, xOffset: waveXOffsetForPosition(number.toDouble()));
     });
   }
 
   static const int sideItemCount = 12;
   static const int targetLevelPosition = 45;
+  static const int sideItemVisibilityHalfWidth = 4;
 
-  static const List<SideItemShape> _shapeCycle = [
-    SideItemShape.sphere,
-    SideItemShape.cube,
-    SideItemShape.pyramid,
-  ];
+  static const List<SideItemShape> _shapeCycle = [SideItemShape.sphere, SideItemShape.cube, SideItemShape.pyramid];
 
-  static const List<Color> _colorCycle = [
-    Colors.orange,
-    Colors.lightBlue,
-    Colors.pinkAccent,
-    Colors.amber,
-  ];
+  static const List<Color> _colorCycle = [Colors.orange, Colors.lightBlue, Colors.pinkAccent, Colors.amber];
 
   List<SideUiItem> _generateSideItems() {
     final spacing = totalLevels / sideItemCount;
     return List.generate(sideItemCount, (index) {
       final centerLevel = ((index + 1) * spacing).round().clamp(1, totalLevels);
       final side = index.isEven ? 1.0 : -1.0;
-      final xOffset = side * (1.3 + (index % 3) * 0.1);
-      return SideUiItem(
-        xOffset: xOffset,
-        minLevelSeen: (centerLevel - 4).clamp(1, totalLevels),
-        maxLevelSeen: (centerLevel + 4).clamp(1, totalLevels),
-        shape: _shapeCycle[index % _shapeCycle.length],
-        color: _colorCycle[index % _colorCycle.length],
-      );
+      // Smooth curve instead of a stepped magnitude, so the distance from
+      // the road swells and eases across the sequence of side items.
+      final curveMagnitude = 1.3 + 0.5 * sin(index * pi / 3);
+      final xOffset = side * curveMagnitude;
+      return SideUiItem(xOffset: xOffset, minLevelSeen: (centerLevel - sideItemVisibilityHalfWidth).clamp(1, totalLevels), maxLevelSeen: (centerLevel + sideItemVisibilityHalfWidth).clamp(1, totalLevels), shape: _shapeCycle[index % _shapeCycle.length], color: _colorCycle[index % _colorCycle.length]);
     });
   }
 
   LongDistanceTargetUiItem _generateTarget() {
-    return const LongDistanceTargetUiItem(
-      xOffset: 0.0,
-      levelPosition: targetLevelPosition,
-    );
+    return const LongDistanceTargetUiItem(xOffset: 0.0, levelPosition: targetLevelPosition);
   }
 
   RoadMap generateMap() {
-    return RoadMap(
-      levels: _generate100LevelsAsWaves(),
-      sideItems: _generateSideItems(),
-      target: _generateTarget(),
-    );
+    return RoadMap(levels: _generate100LevelsAsWaves(), sideItems: _generateSideItems(), target: _generateTarget());
   }
 }
