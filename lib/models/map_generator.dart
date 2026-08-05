@@ -15,13 +15,12 @@ class MapGenerator {
   static const int groupSize = 5;
   static const int sideItemSpacing = 8;
   static const int sideItemVisibilityHalfWidth = 4;
-  static const int targetLevelPosition = 45;
 
   static const List<SideItemShape> _shapeCycle = [SideItemShape.sphere, SideItemShape.cube, SideItemShape.pyramid];
 
   static const List<Color> _colorCycle = [Colors.orange, Colors.lightBlue, Colors.pinkAccent, Colors.amber];
 
-  static const LongDistanceTargetUiItem target = LongDistanceTargetUiItem(xOffset: 0.0, levelPosition: targetLevelPosition);
+  static const LongDistanceTargetUiItem target = LongDistanceTargetUiItem(xOffset: 0.0);
 
   /// Continuous, pure wave function: -1..1, period of 10 levels
   /// (5 sweeping left-to-right, 5 sweeping back), smoothed across
