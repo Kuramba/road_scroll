@@ -23,15 +23,6 @@ class RoadScrollViewModel extends ChangeNotifier {
   /// How many drag pixels correspond to one level of [cameraProgress].
   static const double pixelsPerLevel = 120.0;
 
-  /// How many levels behind the camera are still included in
-  /// [visibleLevels]/[visibleSideItems], so passed items can visibly exit
-  /// the screen instead of popping out of existence.
-  static const double behindWindow = 3.0;
-
-  /// How many levels ahead of the camera are included in
-  /// [visibleLevels]/[visibleSideItems].
-  static const double aheadWindow = 10.0;
-
   /// Exponential decay rate for [_flingVelocity] while flinging (per
   /// second) — higher decays faster, so the fling settles sooner.
   static const double flingDecayRate = 4.0;
@@ -164,20 +155,21 @@ class RoadScrollViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Levels within [behindWindow]/[aheadWindow] of [cameraProgress].
-  /// Levels are infinite, so this window is generated on demand rather
-  /// than sliced from a pre-built list.
+  /// Levels within [MapGenerator.behindWindow]/[MapGenerator.aheadWindow]
+  /// of [cameraProgress]. Levels are infinite, so this window is generated
+  /// on demand rather than sliced from a pre-built list.
   List<LevelUiItem> get visibleLevels {
-    final start = max((_cameraProgress - behindWindow).ceil(), minProgress.toInt());
-    final end = (_cameraProgress + aheadWindow).floor();
+    final start = max((_cameraProgress - MapGenerator.behindWindow).ceil(), minProgress.toInt());
+    final end = (_cameraProgress + MapGenerator.aheadWindow).floor();
     return [for (var number = start; number <= end; number++) MapGenerator.levelAt(number)];
   }
 
   /// Side items whose visibility range overlaps the current
   /// [behindWindow]/[aheadWindow] around [cameraProgress].
+  /// [cameraProgress].
   List<SideUiItem> get visibleSideItems => MapGenerator.sideItemsInRange(
-    _cameraProgress - behindWindow,
-    _cameraProgress + aheadWindow,
+    _cameraProgress - MapGenerator.behindWindow,
+    _cameraProgress + MapGenerator.aheadWindow,
   );
 
   /// The level number closest to the current camera position.

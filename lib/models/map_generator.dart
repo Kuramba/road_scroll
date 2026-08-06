@@ -16,6 +16,16 @@ class MapGenerator {
   static const int sideItemSpacing = 8;
   static const int sideItemVisibilityHalfWidth = 4;
 
+  /// How many levels behind the camera are still considered "visible" —
+  /// shared by the viewmodel (which levels/side items to include) and the
+  /// painter (how far back the road ribbon is drawn), so the two can never
+  /// drift out of sync with each other.
+  static const double behindWindow = 3.0;
+
+  /// How many levels ahead of the camera are considered "visible". See
+  /// [behindWindow].
+  static const double aheadWindow = 10.0;
+
   static const List<SideItemShape> _shapeCycle = [SideItemShape.sphere, SideItemShape.cube, SideItemShape.pyramid];
 
   static const List<Color> _colorCycle = [Colors.orange, Colors.lightBlue, Colors.pinkAccent, Colors.amber];

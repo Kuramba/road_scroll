@@ -51,13 +51,6 @@ class RoadProjection {
 }
 
 class Road3DPainter extends CustomPainter {
-  /// How many levels behind/ahead of the camera the road ribbon extends —
-  /// mirrors RoadScrollViewModel.behindWindow/aheadWindow (duplicated here,
-  /// rather than imported, to keep the rendering engine decoupled from the
-  /// viewmodel; keep these in sync if either changes).
-  static const double roadRenderBehindWindow = -3.0;
-  static const double roadRenderAheadWindow = 10.0;
-
   /// Multiplies every projected depth so consecutive levels sit 3x farther
   /// apart visually along the road, without changing how many raw levels
   /// are considered "ahead/behind" for windowing or close-up zoom.
@@ -166,7 +159,7 @@ class Road3DPainter extends CustomPainter {
 
     final leftPoints = <Offset>[];
     final rightPoints = <Offset>[];
-    for (double z = roadRenderBehindWindow; z <= roadRenderAheadWindow; z += step) {
+    for (double z = -MapGenerator.behindWindow; z <= MapGenerator.aheadWindow; z += step) {
       final levelPosition = cameraProgress + z;
       final xOffsetDelta = MapGenerator.waveXOffsetForPosition(levelPosition) - cameraXOffset;
       final projectedZ = z * levelSpacingMultiplier;

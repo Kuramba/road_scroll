@@ -74,7 +74,7 @@ class _FlashyCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.max,
+      mainAxisSize: MainAxisSize.min,
       children: [
         const Icon(Icons.star, color: Colors.amber),
         const SizedBox(width: 6),
