@@ -43,7 +43,11 @@ class MapGenerator {
 
   /// The single level at [number], generated on demand.
   static LevelUiItem levelAt(int number) {
-    return LevelUiItem(number: number, status: statusForLevel(number), xOffset: waveXOffsetForPosition(number.toDouble()));
+    return LevelUiItem(
+      number: number,
+      status: statusForLevel(number),
+      xOffset: waveXOffsetForPosition(number.toDouble()),
+    );
   }
 
   /// The side item centered at [centerLevel], which must be a positive

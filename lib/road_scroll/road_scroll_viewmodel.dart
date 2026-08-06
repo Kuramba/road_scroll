@@ -9,7 +9,6 @@ import '../models/side_ui_item.dart';
 
 class RoadScrollViewModel extends ChangeNotifier {
   RoadScrollViewModel() {
-    _cameraXOffset = _targetXOffset;
     _lastActiveLevel = pickNearestLevel();
   }
 
@@ -44,11 +43,6 @@ class RoadScrollViewModel extends ChangeNotifier {
   /// (ring pulse, target glow, side-item bob) that runs even at rest.
   static const double pulsePeriodSeconds = 1.6;
 
-  /// Exponential ease rate for [cameraXOffset] chasing [_targetXOffset]
-  /// (per second) — how quickly the camera catches up after crossing a
-  /// level boundary.
-  static const double cameraXOffsetSmoothingRate = 6.0;
-
   /// Exponential ease rate for [_cameraProgress] chasing
   /// [_snapTargetProgress] while [_isSnapping] (per second).
   static const double progressSnapRate = 18.0;
@@ -68,10 +62,6 @@ class RoadScrollViewModel extends ChangeNotifier {
   /// [LevelUiItem.number]). May be fractional while dragging, flinging, or
   /// snapping; always an exact integer once settled.
   double _cameraProgress = minProgress;
-
-  /// The camera's current horizontal offset, eased toward [_targetXOffset]
-  /// every frame — see [cameraXOffset].
-  double _cameraXOffset = 0.0;
 
   /// Current fling speed, in levels/second. Only meaningful while
   /// [_isFlinging] is true; decays toward zero via [flingDecayRate].
@@ -124,15 +114,16 @@ class RoadScrollViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The target [cameraXOffset] eases toward: the nearest level's
-  /// xOffset, snapped rather than interpolated continuously.
-  double get _targetXOffset => MapGenerator.waveXOffsetForPosition(_cameraProgress.roundToDouble());
-
   /// The camera's current horizontal offset (same units as
-  /// [LevelUiItem.xOffset]). Eases smoothly toward [_targetXOffset] every
-  /// frame instead of teleporting to it, so crossing a level boundary
-  /// glides rather than jumps.
-  double get cameraXOffset => _cameraXOffset;
+  /// [LevelUiItem.xOffset]). Sampled directly from the same continuous
+  /// curve every level's own [LevelUiItem.xOffset] comes from, at the
+  /// camera's exact (possibly fractional) position — not eased toward a
+  /// rounded target — so it tracks [cameraProgress] 1:1 whether driven by
+  /// direct drag, fling decay, or snap easing, and never fights any of
+  /// them. The curve is already continuous (smoothed across level-group
+  /// boundaries), so this is smooth by construction with no separate
+  /// easing needed.
+  double get cameraXOffset => MapGenerator.waveXOffsetForPosition(_cameraProgress);
 
   /// 0..1 looping phase for the ambient pulse animation. See [_pulsePhase].
   double get pulsePhase => _pulsePhase;
@@ -214,14 +205,12 @@ class RoadScrollViewModel extends ChangeNotifier {
 
   /// Call once per rendered frame, with the elapsed time since the last
   /// call. Advances every time-driven piece of state: the ambient pulse,
-  /// the camera-offset ease, the active-indicator hop, and whichever of
-  /// fling decay or snap-easing is currently active.
+  /// the active-indicator hop, and whichever of fling decay or
+  /// snap-easing is currently active. [cameraXOffset] needs no per-frame
+  /// update — it's a pure function of [cameraProgress].
   void onFrame(Duration elapsed) {
     final dt = elapsed.inMicroseconds / 1e6;
     _pulsePhase = (_pulsePhase + dt / pulsePeriodSeconds) % 1.0;
-
-    final smoothing = 1.0 - exp(-cameraXOffsetSmoothingRate * dt);
-    _cameraXOffset += (_targetXOffset - _cameraXOffset) * smoothing;
 
     final nearest = pickNearestLevel();
     if (nearest != _lastActiveLevel) {
