@@ -26,9 +26,7 @@ class _RoadScrollAppBarState extends State<RoadScrollAppBar> {
     final start = Offset(screenSize.width / 2, screenSize.height / 2);
 
     final counterBox = _counterKey.currentContext?.findRenderObject() as RenderBox?;
-    final end = counterBox != null
-        ? counterBox.localToGlobal(counterBox.size.center(Offset.zero))
-        : const Offset(40, 40);
+    final end = counterBox != null ? counterBox.localToGlobal(counterBox.size.center(Offset.zero)) : const Offset(40, 40);
 
     late final OverlayEntry entry;
     entry = OverlayEntry(
@@ -76,7 +74,7 @@ class _FlashyCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       children: [
         const Icon(Icons.star, color: Colors.amber),
         const SizedBox(width: 6),
@@ -121,8 +119,7 @@ class _FlyingLevelUpNumberState extends State<_FlyingLevelUpNumber> with SingleT
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))
-      ..forward().whenComplete(widget.onDone);
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))..forward().whenComplete(widget.onDone);
   }
 
   @override

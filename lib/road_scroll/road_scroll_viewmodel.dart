@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../models/level_ui_item.dart';
 import '../models/long_distance_target_ui_item.dart';
@@ -97,6 +98,15 @@ class RoadScrollViewModel extends ChangeNotifier {
   /// Number of times [levelUp] has been called; shown in the app bar.
   int _levelUpCount = 0;
 
+  /// The level number most recently tapped. Only meaningful while
+  /// [_tapEffectPhase] < 1.0 — see [tappedLevelNumber].
+  int? _tappedLevelNumber;
+
+  /// 0..1 progress through the tapped-disc pop effect; 1.0 means no tap
+  /// effect is active. Reset to 0.0 by [onLevelTapped], then advances back
+  /// to 1.0 over [levelTapEffectDurationSeconds].
+  double _tapEffectPhase = 1.0;
+
   /// Continuous position along the road, in levels. See [_cameraProgress].
   double get cameraProgress => _cameraProgress;
 
@@ -111,6 +121,7 @@ class RoadScrollViewModel extends ChangeNotifier {
   /// in the app bar.
   void levelUp() {
     _levelUpCount++;
+    HapticFeedback.mediumImpact();
     notifyListeners();
   }
 
@@ -135,6 +146,23 @@ class RoadScrollViewModel extends ChangeNotifier {
   /// Vertical offset for the active-level indicator: 0 at rest (landed on
   /// the item), bouncing up and back down whenever the active level changes.
   double get activeIndicatorBounce => _hopPhase >= 1.0 ? 0.0 : -activeIndicatorHopHeight * sin(_hopPhase * pi);
+
+  /// The level currently showing a tap-pop effect, or null if none is
+  /// active. See [onLevelTapped].
+  int? get tappedLevelNumber => _tapEffectPhase < 1.0 ? _tappedLevelNumber : null;
+
+  /// 0..1 progress through the tapped-disc pop effect. See [_tapEffectPhase].
+  double get tapEffectPhase => _tapEffectPhase;
+
+  /// Call when the user taps a level disc. Purely tactile/visual feedback
+  /// (a haptic tick plus a brief pop effect on the disc) — no gameplay
+  /// state changes.
+  void onLevelTapped(int levelNumber) {
+    _tappedLevelNumber = levelNumber;
+    _tapEffectPhase = 0.0;
+    HapticFeedback.lightImpact();
+    notifyListeners();
+  }
 
   /// Levels within [behindWindow]/[aheadWindow] of [cameraProgress].
   /// Levels are infinite, so this window is generated on demand rather
@@ -216,9 +244,14 @@ class RoadScrollViewModel extends ChangeNotifier {
     if (nearest != _lastActiveLevel) {
       _lastActiveLevel = nearest;
       _hopPhase = 0.0;
+      HapticFeedback.selectionClick();
     }
     if (_hopPhase < 1.0) {
       _hopPhase = (_hopPhase + dt / activeIndicatorHopDurationSeconds).clamp(0.0, 1.0);
+    }
+    if (_tapEffectPhase < 1.0) {
+      final levelTapEffectDurationSeconds = 0.4;
+      _tapEffectPhase = (_tapEffectPhase + dt / levelTapEffectDurationSeconds).clamp(0.0, 1.0);
     }
 
     if (_isFlinging) {

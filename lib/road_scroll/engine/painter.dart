@@ -70,8 +70,54 @@ class Road3DPainter extends CustomPainter {
   final double cameraXOffset;
   final double pulsePhase;
   final double activeIndicatorBounce;
+  final int? tappedLevelNumber;
+  final double tapEffectPhase;
 
-  Road3DPainter({required this.levels, required this.sideItems, required this.target, required this.cameraProgress, required this.cameraXOffset, required this.pulsePhase, required this.activeIndicatorBounce});
+  Road3DPainter({
+    required this.levels,
+    required this.sideItems,
+    required this.target,
+    required this.cameraProgress,
+    required this.cameraXOffset,
+    required this.pulsePhase,
+    required this.activeIndicatorBounce,
+    this.tappedLevelNumber,
+    this.tapEffectPhase = 1.0,
+  });
+
+  /// Screen center + draw radius for [level]'s disc — the exact geometry
+  /// [_paintLevel] positions/sizes it with, kept in sync manually since
+  /// [_paintLevel] also needs the intermediate raw/base values for the
+  /// checkmark and ring. Used by [hitTestLevel] so a tap only registers
+  /// where the disc is actually drawn.
+  ({Offset center, double radius}) _levelGeometry(RoadProjection projection, LevelUiItem level) {
+    final rawRelativeZ = level.number - cameraProgress;
+    final relativeZ = rawRelativeZ * levelSpacingMultiplier;
+    final projected = projection.project(relativeZ, level.xOffset - cameraXOffset);
+    const frontOffset = -50.0;
+    final center = projected.translate(0, frontOffset * _proximity(rawRelativeZ));
+    final scale = projection.scaleForDepth(relativeZ) * _closeUpScale(rawRelativeZ);
+    return (center: center, radius: 26.0 * scale);
+  }
+
+  /// The level disc containing [position] at render [size], preferring
+  /// whichever is nearest the camera when discs overlap (matches paint
+  /// order — nearer discs are drawn on top). Null if no disc contains it.
+  LevelUiItem? hitTestLevel(Offset position, Size size) {
+    final projection = RoadProjection(size: size);
+    LevelUiItem? best;
+    double? bestAbsZ;
+    for (final level in levels) {
+      final geometry = _levelGeometry(projection, level);
+      if ((position - geometry.center).distanceSquared > geometry.radius * geometry.radius) continue;
+      final absZ = (level.number - cameraProgress).abs();
+      if (bestAbsZ == null || absZ < bestAbsZ) {
+        best = level;
+        bestAbsZ = absZ;
+      }
+    }
+    return best;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -225,6 +271,20 @@ class Road3DPainter extends CustomPainter {
       }
       canvas.drawCircle(indicatorCenter, indicatorRadius, Paint()..color = const Color(0xFFFFEB3B));
     }
+
+    // A quick expanding, fading ring "click" pop wherever the user just
+    // tapped a disc — purely tactile/visual, no gameplay meaning.
+    if (level.number == tappedLevelNumber && tapEffectPhase < 1.0) {
+      final t = tapEffectPhase;
+      final ringRadius = radius * (1.0 + t * 1.1);
+      canvas.drawOval(
+        Rect.fromCenter(center: center, width: ringRadius * 2, height: ringRadius * 1.1),
+        Paint()
+          ..color = Colors.white.withValues(alpha: (1.0 - t) * 0.85)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5 * scale * (1.0 - t * 0.5),
+      );
+    }
   }
 
   void _paintSideItem(Canvas canvas, RoadProjection projection, SideUiItem item) {
@@ -273,7 +333,15 @@ class Road3DPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant Road3DPainter oldDelegate) => oldDelegate.cameraProgress != cameraProgress || oldDelegate.cameraXOffset != cameraXOffset || oldDelegate.pulsePhase != pulsePhase || oldDelegate.levels != levels || oldDelegate.sideItems != sideItems || oldDelegate.target != target;
+  bool shouldRepaint(covariant Road3DPainter oldDelegate) =>
+      oldDelegate.cameraProgress != cameraProgress ||
+      oldDelegate.cameraXOffset != cameraXOffset ||
+      oldDelegate.pulsePhase != pulsePhase ||
+      oldDelegate.levels != levels ||
+      oldDelegate.sideItems != sideItems ||
+      oldDelegate.target != target ||
+      oldDelegate.tappedLevelNumber != tappedLevelNumber ||
+      oldDelegate.tapEffectPhase != tapEffectPhase;
 }
 
 class _DepthEntry {

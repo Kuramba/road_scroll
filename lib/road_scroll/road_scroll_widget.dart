@@ -37,42 +37,66 @@ class _RoadScrollWidgetState extends State<RoadScrollWidget> with SingleTickerPr
     super.dispose();
   }
 
+  void _handleTap(Offset localPosition, Size canvasSize) {
+    final painter = Road3DPainter(
+      levels: _viewModel.visibleLevels,
+      sideItems: _viewModel.visibleSideItems,
+      target: _viewModel.target,
+      cameraProgress: _viewModel.cameraProgress,
+      cameraXOffset: _viewModel.cameraXOffset,
+      pulsePhase: _viewModel.pulsePhase,
+      activeIndicatorBounce: _viewModel.activeIndicatorBounce,
+    );
+    final level = painter.hitTestLevel(localPosition, canvasSize);
+    if (level != null) {
+      _viewModel.onLevelTapped(level.number);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: RoadScrollAppBar(viewModel: _viewModel),
-      body: Stack(
-        children: [
-          GestureDetector(
-            onVerticalDragStart: (_) => _viewModel.onDragStart(),
-            onVerticalDragUpdate: (details) => _viewModel.onDragUpdate(details.delta.dy),
-            onVerticalDragEnd: (details) => _viewModel.onDragEnd(details.primaryVelocity ?? 0.0),
-            child: ListenableBuilder(
-              listenable: _viewModel,
-              builder: (context, _) => CustomPaint(
-                size: Size.infinite,
-                painter: Road3DPainter(
-                  levels: _viewModel.visibleLevels,
-                  sideItems: _viewModel.visibleSideItems,
-                  target: _viewModel.target,
-                  cameraProgress: _viewModel.cameraProgress,
-                  cameraXOffset: _viewModel.cameraXOffset,
-                  pulsePhase: _viewModel.pulsePhase,
-                  activeIndicatorBounce: _viewModel.activeIndicatorBounce,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final canvasSize = constraints.biggest;
+          return Stack(
+            children: [
+              GestureDetector(
+                onVerticalDragStart: (_) => _viewModel.onDragStart(),
+                onVerticalDragUpdate: (details) => _viewModel.onDragUpdate(details.delta.dy),
+                onVerticalDragEnd: (details) => _viewModel.onDragEnd(details.primaryVelocity ?? 0.0),
+                onTapUp: (details) => _handleTap(details.localPosition, canvasSize),
+                child: ListenableBuilder(
+                  listenable: _viewModel,
+                  builder: (context, _) => CustomPaint(
+                    size: canvasSize,
+                    painter: Road3DPainter(
+                      levels: _viewModel.visibleLevels,
+                      sideItems: _viewModel.visibleSideItems,
+                      target: _viewModel.target,
+                      cameraProgress: _viewModel.cameraProgress,
+                      cameraXOffset: _viewModel.cameraXOffset,
+                      pulsePhase: _viewModel.pulsePhase,
+                      activeIndicatorBounce: _viewModel.activeIndicatorBounce,
+                      tappedLevelNumber: _viewModel.tappedLevelNumber,
+                      tapEffectPhase: _viewModel.tapEffectPhase,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            bottom: 16 + MediaQuery.paddingOf(context).bottom,
-            child: FloatingActionButton(
-              heroTag: null,
-              onPressed: _viewModel.returnToStart,
-              child: const Icon(Icons.home),
-            ),
-          ),
-        ],
+              Positioned(
+                left: 16,
+                bottom: 16 + MediaQuery.paddingOf(context).bottom,
+                child: FloatingActionButton(
+                  heroTag: null,
+                  onPressed: _viewModel.returnToStart,
+                  child: const Icon(Icons.home),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
